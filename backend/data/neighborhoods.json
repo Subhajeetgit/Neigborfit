@@ -1,0 +1,52 @@
+[
+  {
+    "id": 1,
+    "name": "Cyber-City",
+    "city": "Delhi",
+    "safety": 3,
+    "affordability": 2,
+    "nightlife": 5,
+    "commute": 4,
+    "schools": 2
+  },
+  {
+    "id": 2,
+    "name": "Deep-Nagar",
+    "city": "Jalandhar",
+    "safety": 5,
+    "affordability": 4,
+    "nightlife": 2,
+    "commute": 3,
+    "schools": 4
+  },
+  {
+    "id": 3,
+    "name": "Kormangla",
+    "city": "Bangalore",
+    "safety": 4,
+    "affordability": 3,
+    "nightlife": 3,
+    "commute": 5,
+    "schools": 5
+  },
+  {
+    "id": 4,
+    "name": "i-HUB",
+    "city": "Hyderabad",
+    "safety": 2,
+    "affordability": 3,
+    "nightlife": 4,
+    "commute": 4,
+    "schools": 3
+  },
+  {
+    "id": 5,
+    "name": "Apj Nagar",
+    "city": "Chennai",
+    "safety": 4,
+    "affordability": 5,
+    "nightlife": 2,
+    "commute": 2,
+    "schools": 4
+  }
+]

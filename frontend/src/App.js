@@ -1,6 +1,20 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import "./App.css";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Container,
+  Button,
+  Box,
+  Card,
+  CardContent,
+  Slider
+} from "@mui/material";
+import Login from "./Login";
+import Signup from "./Signup";
+import ProtectedRoute from "./ProtectedRoute";
 
 function App() {
   const [neighborhoods, setNeighborhoods] = useState([]);
@@ -12,6 +26,7 @@ function App() {
     schools: 3
   });
   const [matches, setMatches] = useState([]);
+  const [token, setToken] = useState(localStorage.getItem("token"));
 
   useEffect(() => {
     axios
@@ -20,68 +35,126 @@ function App() {
       .catch((err) => console.error(err));
   }, []);
 
-  const handleChange = (e) => {
-    setPreferences({
-      ...preferences,
-      [e.target.name]: Number(e.target.value)
-    });
+  const handleChange = (key) => (_, value) => {
+    setPreferences({ ...preferences, [key]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    axios
-      .post("http://localhost:5000/api/match", preferences)
-      .then((res) => setMatches(res.data))
-      .catch((err) => console.error(err));
+    try {
+      const res = await axios.post(
+        "http://localhost:5000/api/match",
+        preferences,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMatches(res.data);
+    } catch (err) {
+      alert("Error fetching matches. Make sure you are logged in.");
+      console.error(err);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setToken(null);
   };
 
   return (
-    <div className="App">
-      <h1>NeighborFit</h1>
+    <Router>
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" sx={{ flexGrow: 1 }}>
+            NeighborFit
+          </Typography>
+          {token ? (
+            <Button color="inherit" onClick={handleLogout}>
+              Logout
+            </Button>
+          ) : (
+            <>
+              <Button color="inherit" component={Link} to="/login">
+                Login
+              </Button>
+              <Button color="inherit" component={Link} to="/signup">
+                Signup
+              </Button>
+            </>
+          )}
+        </Toolbar>
+      </AppBar>
 
-      <h2>All Neighborhoods</h2>
-      <ul>
-        {neighborhoods.map((n) => (
-          <li key={n.id}>
-            <strong>{n.name}</strong> (Safety: {n.safety}, Affordability: {n.affordability})
-          </li>
-        ))}
-      </ul>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute token={token}>
+              <Container maxWidth="md">
+                <Box mt={4}>
+                  <Typography variant="h5">All Neighborhoods</Typography>
+                  <Box display="grid" gap={2}>
+                    {neighborhoods.map((n) => (
+                      <Card key={n.id} variant="outlined">
+                        <CardContent>
+                          <Typography variant="h6">{n.name}</Typography>
+                          <Typography variant="body2">
+                            Safety: {n.safety}, Affordability: {n.affordability}
+                          </Typography>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </Box>
 
-      <h2>Set Your Preferences</h2>
-      <form onSubmit={handleSubmit}>
-        {Object.keys(preferences).map((key) => (
-          <div key={key}>
-            <label>
-              {key.charAt(0).toUpperCase() + key.slice(1)}:
-              <input
-                type="range"
-                min="1"
-                max="5"
-                name={key}
-                value={preferences[key]}
-                onChange={handleChange}
-              />
-              {preferences[key]}
-            </label>
-          </div>
-        ))}
-        <button type="submit">Find Matches</button>
-      </form>
+                  <Box mt={4}>
+                    <Typography variant="h5">Set Your Preferences</Typography>
+                    <form onSubmit={handleSubmit}>
+                      {Object.keys(preferences).map((key) => (
+                        <Box key={key} mb={2}>
+                          <Typography>
+                            {key}: {preferences[key]}
+                          </Typography>
+                          <Slider
+                            value={preferences[key]}
+                            min={1}
+                            max={5}
+                            step={1}
+                            marks
+                            valueLabelDisplay="auto"
+                            onChange={handleChange(key)}
+                          />
+                        </Box>
+                      ))}
+                      <Button variant="contained" color="primary" type="submit">
+                        Find Matches
+                      </Button>
+                    </form>
+                  </Box>
 
-      {matches.length > 0 && (
-        <>
-          <h2>Recommended Neighborhoods</h2>
-          <ul>
-            {matches.map((m) => (
-              <li key={m.id}>
-                <strong>{m.name}</strong> - Match Score: {m.matchScore}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-    </div>
+                  {matches.length > 0 && (
+                    <Box mt={4}>
+                      <Typography variant="h5">Recommended Neighborhoods</Typography>
+                      <Box display="grid" gap={2}>
+                        {matches.map((m) => (
+                          <Card key={m.id} variant="outlined" sx={{ backgroundColor: "#e3f2fd" }}>
+                            <CardContent>
+                              <Typography variant="h6">{m.name}</Typography>
+                              <Typography variant="body2">
+                                Match Score: {m.matchScore}
+                              </Typography>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+                </Box>
+              </Container>
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/login" element={<Login setToken={setToken} />} />
+        <Route path="/signup" element={<Signup />} />
+      </Routes>
+    </Router>
   );
 }
 
